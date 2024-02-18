@@ -5,7 +5,161 @@
   <link rel="stylesheet" type="text/css" href="/style.css">
   
   <script>
+    //Handle response takes in the response and a boolean of if we should parse the response or not.
+    const handleGetUserResponse = async (response, parseResponse) => {
 
+      const content = document.querySelector('#content');
+      content.innerHTML = "";
+
+      //will show status
+      const contentStatus = document.createElement('h1');
+
+      //will show response results data
+      const message = document.createElement('p');
+
+      switch(response.status) {
+        case 200:
+          contentStatus.textContent = `Success`;
+          break;
+        case 404:
+          contentStatus.textContent = `Not Found`;
+          break;
+        default:
+          contentStatus.textContent = `Error code not implemented by client`;
+          break;
+      }
+
+      //If we make a get request
+      if(parseResponse) {
+        //if we made get request it will display response, else it will display nothing
+        let obj = await response.json();
+        console.log(obj);
+        //displaying json
+        let jsonString = JSON.stringify(obj);
+        message.textContent = `${jsonString}`;
+      }
+      else {
+        message.textContent = ``;
+      }
+
+      content.appendChild(contentStatus);
+      content.appendChild(message);
+    };
+
+    //Handles post reposnses
+    const handlePostResponse = async (response) => {
+
+      const content = document.querySelector('#content');
+      content.innerHTML = "";
+
+      //will show status
+      const contentStatus = document.createElement('h1');
+
+      //will show response results data
+      const message = document.createElement('p');
+
+      switch(response.status) {
+        case 201:
+          contentStatus.textContent = `Created`;
+          break;
+        case 204:
+          contentStatus.textContent = `Updated (No Content)`
+          break;
+        case 400:
+          contentStatus.textContent = `Bad Request`;
+          break;
+        default:
+          contentStatus.textContent = `Error code not implemented by client`;
+          break;
+      }
+
+      if(response.status === 204){
+        message.textContent = ``;
+      }
+      else{
+
+        let obj = await response.json();
+        console.log(obj);
+        //displaying json
+        message.textContent = `${obj.message}`;
+      }
+      
+      content.appendChild(contentStatus);
+      content.appendChild(message);
+
+    };
+
+    //Using fetch to send a postRequest. 
+    const sendPost = async (nameForm) => {
+      //grabbing all info from form
+      const nameAction = nameForm.getAttribute('action');
+      const nameMethod = nameForm.getAttribute('method');
+
+      const nameField = nameForm.querySelector('#nameField');
+      const ageField = nameForm.querySelector('#ageField');
+
+      //building data string in FORM-URLENCODED format
+      const formData = `name=${nameField.value}&age=${ageField.value}`;
+      //fetch request
+      let response = await fetch(nameAction, {
+        method: nameMethod,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Accept': 'application/json',
+        },
+        body: formData,
+      });
+
+      //once response handle it
+      handlePostResponse(response);
+    };
+
+    //sending request.
+    const requestUpdate = async (userForm) => {
+
+      //Grabbing the url and method from html form
+      const url = document.querySelector('#urlField').value;
+
+      const method = userForm.querySelector('#methodSelect').value;
+
+      let response = await fetch(url, {
+        method,
+        headers: {
+          'Accept': 'application/json'
+        },
+      });
+
+      handleGetUserResponse(response, method === 'get');
+    };
+
+    const init = () => {
+
+      //Grabbing nameForm
+      const nameForm = document.querySelector('#nameForm');
+
+      //addUser function cancels the forms default action and calls sendPost
+      const addUser = (e)=> {
+        e.preventDefault();
+        sendPost(nameForm);
+        return false;
+      }
+
+      nameForm.addEventListener('submit',addUser);
+
+      //grab form
+      const userForm = document.querySelector('#userForm');
+
+      //handles our request
+      const getUsers = (e) => {
+        e.preventDefault();
+        requestUpdate(userForm);
+        return false;
+      }
+
+      userForm.addEventListener('submit', getUsers);
+    }
+
+    window.onload = init;
   </script>
 </head>
 <body>
